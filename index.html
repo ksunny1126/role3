@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>우글와글 1인 1역할 배정기 - 우리 반 소중한 약속</title>
+  <meta name="description" content="초등학교 교실을 위한 귀엽고 산뜻한 1인 1역할 랜덤 배정 웹 애플리케이션. A4 게시판 인쇄 및 구글 스프레드시트 연동 준비 완료.">
+  <meta property="og:title" content="우글와글 1인 1역할 배정기">
+  <meta property="og:description" content="초등학교 교실을 위한 1인 1역할 랜덤 배정기">
+  <meta property="og:type" content="website">
+
+  <!-- Font & Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Gaegu:wght@700&family=Nanum+Square+Round:wght@400;700;800&family=Pretendard:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+  <!-- Confetti Canvas for Celebration -->
+  <canvas id="confettiCanvas"></canvas>
+
+  <!-- Toast Notification -->
+  <div id="toastNotice" class="toast-notice">
+    <span id="toastIcon">✨</span>
+    <span id="toastMessage">안내 메시지</span>
+  </div>
+
+  <div class="app-container">
+    <!-- Web Header -->
+    <header class="app-header">
+      <div class="brand-area">
+        <div class="brand-icon">🎒</div>
+        <div>
+          <h1 class="brand-title">
+            우글와글 1인 1역할
+            <span class="brand-badge">우리 반 약속</span>
+          </h1>
+          <p class="brand-desc">모두가 주인공이 되어 스스로 돕고 배려하는 행복 교실</p>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <!-- Next Step Google Sheets Integration Hook Buttons -->
+        <button id="btnOpenLoadSheet" class="btn btn-sheet-load" title="구글 스프레드시트에서 학생과 역할 불러오기">
+          <span>🔄</span> 시트 불러오기
+        </button>
+        <button id="btnOpenSaveSheet" class="btn btn-sheet-save" title="배정 결과를 구글 스프레드시트에 저장하기">
+          <span>💾</span> 시트에 결과 저장
+        </button>
+        <!-- Print Button -->
+        <button id="btnPrintBoard" class="btn btn-print" title="교실 게시판 부착용 A4 인쇄하기">
+          <span>🖨️</span> A4 게시판 인쇄
+        </button>
+        <!-- Manage List Button -->
+        <button id="btnOpenManageModal" class="btn btn-settings" title="학생 명단과 역할 목록 직접 수정하기">
+          <span>✏️</span> 명단·역할 관리
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Control Banner -->
+    <section class="control-banner">
+      <div class="class-info-row">
+        <div class="class-tag-group">
+          <input type="text" id="inputClassName" class="input-class-name" value="3학년 2반" title="학급 이름 수정 가능" aria-label="학급 이름">
+          <span class="date-pill" id="todayDatePill">배정일: 오늘</span>
+        </div>
+
+        <div class="stats-group">
+          <div class="stat-chip">
+            <span>👥 학생:</span>
+            <strong id="statStudentCount">12명</strong>
+          </div>
+          <div class="stat-chip">
+            <span>🌟 역할:</span>
+            <strong id="statRoleCount">12개</strong>
+          </div>
+          <div class="stat-chip">
+            <span>🎯 배정 상태:</span>
+            <strong id="statAssignStatus">대기 중</strong>
+          </div>
+        </div>
+      </div>
+
+      <div class="action-main-row">
+        <!-- Main Random Assignment Button -->
+        <button id="btnAssignRoles" class="btn-assign-main">
+          <span>🎲</span>
+          <span>역할 배정하기!</span>
+        </button>
+
+        <div class="sub-controls">
+          <button id="btnReshuffle" class="btn btn-secondary" title="현재 배정 결과를 무작위로 다시 섞기">
+            <span>🔀</span> 다시 섞기
+          </button>
+          <button id="btnResetAssignments" class="btn btn-secondary" title="배정 결과를 초기화하고 대기 상태로 변경">
+            <span>🧹</span> 초기화
+          </button>
+          <button id="btnToggleSound" class="sound-toggle-btn active" title="효과음 켜기/끄기">
+            <span id="soundIcon">🔊</span> 효과음 ON
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Filter & View Switcher -->
+    <div class="filter-bar">
+      <div class="search-box">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="searchInput" placeholder="학생 이름 또는 역할 검색...">
+      </div>
+
+      <div class="view-tabs">
+        <button id="tabCardView" class="view-tab active">🗂️ 카드형 보기</button>
+        <button id="tabTableView" class="view-tab">📋 게시판 표 보기</button>
+      </div>
+    </div>
+
+    <!-- Print Only Bulletin Header -->
+    <div class="print-only print-header">
+      <h1 id="printClassTitle">🏫 3학년 2반 1인 1역할 배정표</h1>
+      <p class="print-motto">"작은 실천이 모여 큰 배려가 됩니다. 우리 모두의 힘으로 빛나는 교실을 만들어요!"</p>
+      <div class="print-meta-row">
+        <span id="printDateText">배정일: 2026년 10월 17일</span>
+        <span>담임교사 확인: _________________ (인)</span>
+      </div>
+    </div>
+
+    <!-- View 1: Card Grid View -->
+    <main id="cardsGrid" class="cards-grid">
+      <!-- Generated Dynamically by script.js -->
+    </main>
+
+    <!-- View 2: Table / Bulletin View (also used by Print) -->
+    <section id="tableViewContainer" class="table-view-container">
+      <table class="board-table">
+        <thead>
+          <tr>
+            <th class="col-num">번호</th>
+            <th class="col-student">학생 이름</th>
+            <th class="col-role">담당 역할</th>
+            <th class="col-desc">하는 일 (실천 약속)</th>
+            <th class="col-stamp">주간 실천 확인</th>
+          </tr>
+        </thead>
+        <tbody id="boardTableBody">
+          <!-- Generated Dynamically by script.js -->
+        </tbody>
+      </table>
+    </section>
+
+    <!-- Print Only Footer -->
+    <div class="print-only print-footer">
+      <span>* 매주 금요일 방과후 역할을 성실히 수행했는지 서로 칭찬하고 스탬프를 받아요.</span>
+      <span>우글와글 학급 자치 시스템</span>
+    </div>
+  </div>
+
+  <!-- ========================================================================
+       MODAL 1: Google Sheets Load Modal [🔄 시트 불러오기]
+       ======================================================================== -->
+  <div id="sheetLoadModal" class="modal-backdrop">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title"><span>🔄</span> 구글 시트에서 불러오기</h2>
+        <button class="modal-close-btn" data-close="sheetLoadModal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p style="margin-bottom: 14px; color: #4B5563;">
+          구글 스프레드시트(Apps Script Web App)에 등록된 학생 명단과 역할 목록을 앱으로 불러옵니다.
+        </p>
+
+        <div class="form-group">
+          <label class="form-label" for="inputLoadScriptUrl">Apps Script 웹 앱 URL (doGet)</label>
+          <input type="url" id="inputLoadScriptUrl" class="form-input" placeholder="https://script.google.com/macros/s/.../exec">
+          <p class="form-help">다음 단계에서 배포할 Google Apps Script의 웹 앱 URL을 입력해 주세요.</p>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">간편 테스트 데이터 불러오기</label>
+          <div style="display:flex; gap: 8px;">
+            <button id="btnMockSheetLoad" class="btn btn-sheet-load" style="font-size:0.85rem; padding: 8px 12px;">
+              ⚡ 테스트 연동 시뮬레이션
+            </button>
+            <button id="btnQuickCsvLoad" class="btn btn-secondary" style="font-size:0.85rem; padding: 8px 12px;">
+              📁 CSV 파일 가져오기
+            </button>
+            <input type="file" id="fileCsvInput" accept=".csv" style="display:none;">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">스프레드시트 권장 형식 안내</label>
+          <div class="code-box">
+[시트 1열: 학생 이름] | [시트 2열: 역할 이름] | [시트 3열: 역할 설명] | [시트 4열: 아이콘]
+예시:
+김하늘 | 칠판 청결 요정 | 칠판과 지우개를 늘 깨끗하게 닦아요 | 🧼
+이서준 | 급식 배식 도우미 | 점심시간에 식판과 줄을 챙겨요 | 🍱
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-close="sheetLoadModal">닫기</button>
+        <button id="btnExecuteSheetLoad" class="btn btn-sheet-load">
+          <span>🔄</span> 시트에서 불러오기 실행
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================
+       MODAL 2: Google Sheets Save Modal [💾 시트에 결과 저장]
+       ======================================================================== -->
+  <div id="sheetSaveModal" class="modal-backdrop">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title"><span>💾</span> 구글 시트에 결과 저장</h2>
+        <button class="modal-close-btn" data-close="sheetSaveModal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p style="margin-bottom: 14px; color: #4B5563;">
+          현재 배정된 학생-역할 매칭 결과를 구글 스프레드시트에 전송하거나 복사합니다.
+        </p>
+
+        <div class="form-group">
+          <label class="form-label" for="inputSaveScriptUrl">Apps Script 웹 앱 URL (doPost)</label>
+          <input type="url" id="inputSaveScriptUrl" class="form-input" placeholder="https://script.google.com/macros/s/.../exec">
+          <p class="form-help">Google Apps Script 배포 URL로 현재 배정 JSON 데이터가 전송됩니다.</p>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">클립보드 / 엑셀 복사 및 내보내기</label>
+          <div style="display:flex; gap: 8px; flex-wrap:wrap;">
+            <button id="btnCopyClipboard" class="btn btn-sheet-save" style="font-size:0.85rem; padding: 8px 12px;">
+              📋 클립보드에 표 복사 (스프레드시트에 바로 붙여넣기)
+            </button>
+            <button id="btnExportCsv" class="btn btn-secondary" style="font-size:0.85rem; padding: 8px 12px;">
+              📥 CSV 파일 다운로드
+            </button>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">저장될 데이터 미리보기</label>
+          <pre id="jsonPreviewBox" class="code-box" style="max-height: 140px;"></pre>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-close="sheetSaveModal">닫기</button>
+        <button id="btnExecuteSheetSave" class="btn btn-sheet-save">
+          <span>💾</span> 시트로 전송하기
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================
+       MODAL 3: Manage Students & Roles [✏️ 명단·역할 관리]
+       ======================================================================== -->
+  <div id="manageModal" class="modal-backdrop">
+    <div class="modal-content" style="max-width: 720px;">
+      <div class="modal-header">
+        <h2 class="modal-title"><span>✏️</span> 학생 명단 & 역할 목록 설정</h2>
+        <button class="modal-close-btn" data-close="manageModal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+          <p style="font-size: 0.88rem; color:#6B7280;">한 줄에 한 명씩 또는 한 역할씩 줄바꿈(엔터)으로 입력해 주세요.</p>
+          <button id="btnResetToDefault" class="btn btn-secondary" style="font-size: 0.8rem; padding: 4px 10px;">
+            🔄 기본 12명 예시로 복원
+          </button>
+        </div>
+
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+          <div class="form-group">
+            <label class="form-label" for="textareaStudents">
+              👥 학생 명단 (<span id="manageStudentCount">12</span>명)
+            </label>
+            <textarea id="textareaStudents" class="form-textarea" rows="12" placeholder="김하늘&#10;이서준&#10;박지민..."></textarea>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="textareaRoles">
+              🌟 역할 목록 (<span id="manageRoleCount">12</span>개)
+            </label>
+            <textarea id="textareaRoles" class="form-textarea" rows="12" placeholder="🧼 칠판 청결 요정 : 칠판과 지우개를 늘 깨끗하게 닦아요&#10;🍱 급식 배식 도우미 : 점심시간에 식판과 줄을 챙겨요..."></textarea>
+            <p class="form-help">형식: [이모지] 역할이름 : 역할설명</p>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-close="manageModal">취소</button>
+        <button id="btnSaveManagement" class="btn btn-sheet-load">
+          <span>💾</span> 변경사항 저장 적용
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================
+       MODAL 4: Manual Role Swap Modal (카드 수동 변경)
+       ======================================================================== -->
+  <div id="swapModal" class="modal-backdrop">
+    <div class="modal-content" style="max-width: 440px;">
+      <div class="modal-header">
+        <h2 class="modal-title"><span>🤝</span> 학생 역할 수동 변경</h2>
+        <button class="modal-close-btn" data-close="swapModal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p id="swapTargetRoleInfo" style="font-weight: 800; font-size: 1.1rem; margin-bottom: 12px; color: #B45309;">
+          역할 이름
+        </p>
+        <div class="form-group">
+          <label class="form-label" for="selectSwapStudent">배정할 학생 선택</label>
+          <select id="selectSwapStudent" class="form-input" style="font-size: 1rem; font-weight: 700;">
+            <!-- Options populated dynamically -->
+          </select>
+          <p class="form-help">다른 학생을 선택하면 서로의 역할이 안전하게 교환(맞바꿈)됩니다.</p>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-close="swapModal">취소</button>
+        <button id="btnConfirmSwap" class="btn btn-assign-main" style="font-size: 0.95rem; padding: 8px 18px;">
+          <span>✅</span> 역할 변경하기
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Application Logic -->
+  <script type="module" src="./script.js"></script>
+</body>
+</html>
