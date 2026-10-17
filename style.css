@@ -616,14 +616,131 @@ body {
   color: #374151;
 }
 
-/* Card Shuffle Animation Effect */
-.role-card.shuffling {
-  animation: cardPulse 0.15s infinite alternate;
+/* Card Shuffle & Slot Machine Animation Effects */
+.role-card.is-slot-spinning {
+  border-color: #F59E0B !important;
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.35), 0 10px 24px rgba(245, 158, 11, 0.25) !important;
+  animation: slotCardRumble 0.12s infinite alternate ease-in-out;
 }
 
-@keyframes cardPulse {
-  0% { transform: scale(0.98) rotate(-1deg); }
-  100% { transform: scale(1.02) rotate(1deg); }
+@keyframes slotCardRumble {
+  0% { transform: translateY(-2px) scale(1.01); }
+  100% { transform: translateY(2px) scale(0.99); }
+}
+
+/* Slot Machine Reel Window */
+.slot-reel-window {
+  position: relative;
+  height: 56px;
+  overflow: hidden;
+  background: #FFFDF5;
+  border: 2px solid #FCD34D;
+  border-radius: var(--radius-md);
+  box-shadow: inset 0 3px 6px rgba(0, 0, 0, 0.08);
+}
+
+/* Glass Cylinder Depth Overlay */
+.slot-reel-window::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(217, 119, 6, 0.18) 0%,
+    transparent 25%,
+    transparent 75%,
+    rgba(217, 119, 6, 0.18) 100%
+  );
+  pointer-events: none;
+  z-index: 5;
+}
+
+/* Spinning strip container */
+.slot-reel-strip {
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.35s cubic-bezier(0.15, 0.9, 0.25, 1.2);
+  will-change: transform;
+}
+
+.slot-reel-strip.spinning {
+  animation: reelScrollInfinite 0.32s linear infinite;
+  filter: blur(1px);
+}
+
+@keyframes reelScrollInfinite {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(-336px); } /* 6 items * 56px */
+}
+
+/* Individual Reel Item */
+.slot-reel-item {
+  height: 56px;
+  min-height: 56px;
+  max-height: 56px;
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  gap: 10px;
+  box-sizing: border-box;
+}
+
+/* Slot Locked / Decelerated Stop State */
+.role-card.slot-locked {
+  animation: slotLockPop 0.55s cubic-bezier(0.175, 0.885, 0.32, 1.35) forwards;
+  border-color: #10B981 !important;
+}
+
+@keyframes slotLockPop {
+  0% { transform: scale(0.92); }
+  50% { transform: scale(1.06); }
+  100% { transform: scale(1); }
+}
+
+.slot-locked-badge {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: linear-gradient(135deg, #10B981, #059669);
+  color: #FFFFFF;
+  font-size: 0.72rem;
+  font-weight: 900;
+  padding: 3px 9px;
+  border-radius: var(--radius-full);
+  box-shadow: 0 2px 6px rgba(16, 185, 129, 0.4);
+  animation: badgeSparkle 0.4s ease-out;
+  z-index: 10;
+}
+
+@keyframes badgeSparkle {
+  0% { transform: scale(0) rotate(-20deg); opacity: 0; }
+  100% { transform: scale(1) rotate(0deg); opacity: 1; }
+}
+
+/* Slot Active Button Animation */
+.btn-assign-main.is-spinning {
+  background: linear-gradient(135deg, #7C3AED 0%, #DB2777 100%) !important;
+  box-shadow: 0 6px 0 #5B21B6, 0 10px 20px rgba(124, 58, 237, 0.3) !important;
+  cursor: pointer;
+  animation: pulseSpinButton 1s infinite alternate ease-in-out;
+}
+
+@keyframes pulseSpinButton {
+  0% { transform: scale(1); }
+  100% { transform: scale(1.03); }
+}
+
+.slot-dice-spin {
+  display: inline-block;
+  animation: diceRoll 0.4s linear infinite;
+}
+
+@keyframes diceRoll {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 
 .role-card.assigned-pop {

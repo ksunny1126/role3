@@ -99,27 +99,80 @@ class SoundManager {
     }
   }
 
+  playSlotSpinTick() {
+    if (!state.isSoundEnabled) return;
+    this.init();
+    if (!this.ctx) return;
+
+    try {
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = 'triangle';
+      const randomFreq = 380 + Math.random() * 200;
+      osc.frequency.setValueAtTime(randomFreq, this.ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(150, this.ctx.currentTime + 0.04);
+
+      gain.gain.setValueAtTime(0.12, this.ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.005, this.ctx.currentTime + 0.04);
+
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+      osc.start();
+      osc.stop(this.ctx.currentTime + 0.045);
+    } catch {
+      // Audio fallback silent
+    }
+  }
+
+  playReelStop(index, total) {
+    if (!state.isSoundEnabled) return;
+    this.init();
+    if (!this.ctx) return;
+
+    try {
+      // C Major pentatonic scale ascending progression
+      const notes = [523.25, 587.33, 659.25, 783.99, 880.00, 1046.50, 1174.66, 1318.51];
+      const freq = notes[index % notes.length];
+
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+
+      gain.gain.setValueAtTime(0, this.ctx.currentTime);
+      gain.gain.linearRampToValueAtTime(0.22, this.ctx.currentTime + 0.015);
+      gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.22);
+
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+      osc.start();
+      osc.stop(this.ctx.currentTime + 0.23);
+    } catch {
+      // Audio fallback silent
+    }
+  }
+
   playFanfare() {
     if (!state.isSoundEnabled) return;
     this.init();
     if (!this.ctx) return;
 
     try {
-      const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+      const notes = [523.25, 659.25, 783.99, 1046.50, 1318.51]; // C5, E5, G5, C6, E6
       notes.forEach((freq, idx) => {
         const osc = this.ctx.createOscillator();
         const gain = this.ctx.createGain();
         osc.type = 'triangle';
-        osc.frequency.setValueAtTime(freq, this.ctx.currentTime + idx * 0.09);
+        osc.frequency.setValueAtTime(freq, this.ctx.currentTime + idx * 0.08);
 
-        gain.gain.setValueAtTime(0, this.ctx.currentTime + idx * 0.09);
-        gain.gain.linearRampToValueAtTime(0.25, this.ctx.currentTime + idx * 0.09 + 0.02);
-        gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + idx * 0.09 + 0.4);
+        gain.gain.setValueAtTime(0, this.ctx.currentTime + idx * 0.08);
+        gain.gain.linearRampToValueAtTime(0.28, this.ctx.currentTime + idx * 0.08 + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + idx * 0.08 + 0.45);
 
         osc.connect(gain);
         gain.connect(this.ctx.destination);
-        osc.start(this.ctx.currentTime + idx * 0.09);
-        osc.stop(this.ctx.currentTime + idx * 0.09 + 0.45);
+        osc.start(this.ctx.currentTime + idx * 0.08);
+        osc.stop(this.ctx.currentTime + idx * 0.08 + 0.48);
       });
     } catch {
       // Audio fallback silent
@@ -235,9 +288,20 @@ function shuffleArray(array) {
   return arr;
 }
 
-// --- 7. 메인 역할 배정 실행 로직 ---
+// --- 7. 메인 역할 배정 실행 로직 (슬롯 머신 릴 롤링 & 순차 멈춤 애니메이션) ---
+let slotMachineState = {
+  activeTimeouts: [],
+  tickInterval: null,
+  targetAssignments: []
+};
+
 function assignRolesWithAnimation() {
-  if (state.isShuffling) return;
+  // 이미 회전 중인 경우: 즉시 완료(Fast Forward) 처리
+  if (state.isShuffling) {
+    fastForwardSlotMachine();
+    return;
+  }
+
   if (state.students.length === 0 || state.roles.length === 0) {
     showToast('학생 또는 역할 목록이 비어 있습니다.', '⚠️');
     return;
@@ -245,34 +309,27 @@ function assignRolesWithAnimation() {
 
   soundManager.init();
   state.isShuffling = true;
-  const cards = document.querySelectorAll('.role-card');
-  cards.forEach(card => card.classList.add('shuffling'));
 
-  let ticks = 0;
-  const maxTicks = 12;
-  const interval = setInterval(() => {
-    ticks++;
-    soundManager.playPop();
+  // 만약 표 보기 모드였다면 시각 효과를 위해 카드 뷰로 자동 전환
+  if (state.currentView !== 'card') {
+    const tabCard = document.getElementById('tabCardView');
+    if (tabCard) tabCard.click();
+  }
 
-    // 임시 셔플 미리보기 시뮬레이션
-    const tempShuffled = shuffleArray(state.students);
-    renderCards(tempShuffled, true);
+  // 검색창 비우기 (모든 카드가 화면에 보이도록)
+  const searchInput = document.getElementById('searchInput');
+  if (searchInput && state.searchQuery) {
+    searchInput.value = '';
+    state.searchQuery = '';
+  }
 
-    if (ticks >= maxTicks) {
-      clearInterval(interval);
-      finalizeAssignment();
-    }
-  }, 80);
-}
-
-function finalizeAssignment() {
-  // 실제 최종 셔플
+  // 1. 공정한 피셔-예이츠 셔플로 최종 배정 결과 미리 계산
   const shuffledStudents = shuffleArray(state.students);
+  const totalCards = state.roles.length;
   const newAssignments = [];
 
-  const count = Math.max(state.roles.length, state.students.length);
-  for (let i = 0; i < count; i++) {
-    const role = state.roles[i] || { id: i + 1, icon: '🌟', name: `자율 역할 ${i + 1}`, desc: '학급 자치 자율 역할' };
+  for (let i = 0; i < totalCards; i++) {
+    const role = state.roles[i];
     const student = shuffledStudents[i] || '미배정';
     newAssignments.push({
       roleId: role.id,
@@ -283,18 +340,186 @@ function finalizeAssignment() {
     });
   }
 
-  state.assignments = newAssignments;
+  slotMachineState.targetAssignments = newAssignments;
+  slotMachineState.activeTimeouts = [];
+
+  // 2. UI 버튼 및 통계 갱신
+  const btnAssign = document.getElementById('btnAssignRoles');
+  if (btnAssign) {
+    btnAssign.classList.add('is-spinning');
+    btnAssign.innerHTML = `<span class="slot-dice-spin">🎰</span> <span>두근두근 슬롯 배정 중... (0/${totalCards})</span> <small style="font-size:0.75rem; opacity:0.85; margin-left:6px;">[클릭 시 즉시 멈춤 ⏩]</small>`;
+  }
+
+  const statStatus = document.getElementById('statAssignStatus');
+  if (statStatus) {
+    statStatus.textContent = '🎰 릴 회전 중! 🎲';
+    statStatus.style.color = '#7C3AED';
+  }
+
+  // 3. 카드 그리드의 각 카드를 슬롯 릴 창으로 전환
+  renderCards(null, false); // 깨끗한 카드 그리드 확보
+  const cards = document.querySelectorAll('.role-card');
+
+  cards.forEach((card, idx) => {
+    card.classList.add('is-slot-spinning');
+    const slotContainer = card.querySelector('.student-slot');
+    if (!slotContainer) return;
+
+    // 슬롯 릴에 보여줄 회전용 가상 학생 리스트 (6개 아이템)
+    const reelStudents = [];
+    for (let k = 0; k < 6; k++) {
+      reelStudents.push(state.students[(idx + k) % state.students.length]);
+    }
+
+    const reelItemsHtml = reelStudents.map(name => `
+      <div class="slot-reel-item">
+        <div class="student-avatar" style="background:#FEF3C7; color:#B45309; border-color:#FDE68A;">${name.charAt(0)}</div>
+        <div class="student-name-box">
+          <span class="student-label">후보 학생</span>
+          <span class="student-name" style="color:#4B5563;">${name}</span>
+        </div>
+      </div>
+    `).join('');
+
+    slotContainer.outerHTML = `
+      <div class="slot-reel-window" data-slot-index="${idx}">
+        <div class="slot-reel-strip spinning">
+          ${reelItemsHtml}
+          ${reelItemsHtml}
+        </div>
+      </div>
+    `;
+  });
+
+  // 4. 슬롯머신 기계음(기어 회전 째깍 소리) 인터벌 가동
+  slotMachineState.tickInterval = setInterval(() => {
+    soundManager.playSlotSpinTick();
+  }, 85);
+
+  // 5. 순차적 릴 멈춤 (Staggered Sequential Stop)
+  // 12개 카드 기준: 0.5초부터 시작하여 120ms 간격으로 하나씩 멈춤 (총 ~1.9초)
+  const baseDelay = 500;
+  const stepDelay = Math.max(90, Math.min(150, Math.floor(1800 / totalCards)));
+
+  cards.forEach((card, idx) => {
+    const stopTime = baseDelay + idx * stepDelay;
+    const timeoutId = setTimeout(() => {
+      lockReelCard(idx, totalCards);
+    }, stopTime);
+    slotMachineState.activeTimeouts.push(timeoutId);
+  });
+}
+
+// 개별 슬롯 릴 멈춤 처리
+function lockReelCard(cardIdx, totalCards) {
+  const card = document.querySelectorAll('.role-card')[cardIdx];
+  if (!card) return;
+
+  const target = slotMachineState.targetAssignments[cardIdx];
+  if (!target) return;
+
+  const reelWindow = card.querySelector('.slot-reel-window');
+  if (reelWindow) {
+    const initial = target.studentName.charAt(0);
+    reelWindow.innerHTML = `
+      <div class="slot-reel-item" style="height:100%; justify-content:space-between; animation: popSuccess 0.4s ease-out;">
+        <div class="student-info">
+          <div class="student-avatar" style="background:#D1FAE5; color:#065F46; border-color:#A7F3D0;">${initial}</div>
+          <div class="student-name-box">
+            <span class="student-label" style="color:#059669; font-weight:800;">배정 확정! ✨</span>
+            <span class="student-name" style="color:#111827;">${target.studentName}</span>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  card.classList.remove('is-slot-spinning');
+  card.classList.add('slot-locked');
+
+  // 당첨 뱃지 부착
+  const existingBadge = card.querySelector('.slot-locked-badge');
+  if (!existingBadge) {
+    const badge = document.createElement('span');
+    badge.className = 'slot-locked-badge';
+    badge.textContent = '🎉 당첨!';
+    card.appendChild(badge);
+  }
+
+  // 벨 소리 재생
+  soundManager.playReelStop(cardIdx, totalCards);
+
+  // 상단 진행 상태 업데이트
+  const btnAssign = document.getElementById('btnAssignRoles');
+  if (btnAssign && state.isShuffling) {
+    btnAssign.innerHTML = `<span class="slot-dice-spin">🎰</span> <span>두근두근 슬롯 배정 중... (${cardIdx + 1}/${totalCards})</span> <small style="font-size:0.75rem; opacity:0.85; margin-left:6px;">[클릭 시 즉시 멈춤 ⏩]</small>`;
+  }
+
+  // 마지막 릴이 멈췄을 때 전체 완료 처리
+  if (cardIdx === totalCards - 1) {
+    finishSlotMachine();
+  }
+}
+
+// 즉시 완료(패스트포워드)
+function fastForwardSlotMachine() {
+  if (!state.isShuffling) return;
+
+  // 모든 예약된 타이머 취소
+  slotMachineState.activeTimeouts.forEach(t => clearTimeout(t));
+  slotMachineState.activeTimeouts = [];
+
+  const totalCards = state.roles.length;
+  for (let i = 0; i < totalCards; i++) {
+    lockReelCard(i, totalCards);
+  }
+}
+
+// 슬롯머신 배정 완료 최종 정리
+function finishSlotMachine() {
+  if (slotMachineState.tickInterval) {
+    clearInterval(slotMachineState.tickInterval);
+    slotMachineState.tickInterval = null;
+  }
+
+  state.assignments = [...slotMachineState.targetAssignments];
   state.isShuffling = false;
   state.save();
 
-  renderAllViews();
+  // 화려한 팡파레와 컨페티 축포
   soundManager.playFanfare();
-  confetti.burst(90);
-  showToast('🎉 1인 1역할 배정이 멋지게 완료되었습니다!', '🎊');
+  confetti.burst(110);
+
+  const btnAssign = document.getElementById('btnAssignRoles');
+  if (btnAssign) {
+    btnAssign.classList.remove('is-spinning');
+    btnAssign.innerHTML = `<span>🎲</span> <span>역할 배정하기!</span>`;
+  }
+
+  updateStats();
+  renderTable();
+  updatePrintHeader();
+
+  // 1초 뒤 일반 카드 뷰로 부드럽게 복구 (수동 변경 버튼 활성화)
+  setTimeout(() => {
+    if (!state.isShuffling) {
+      renderCards();
+    }
+  }, 1200);
+
+  showToast('🎉 슬롯머신 배정 완료! 1인 1역할이 멋지게 정해졌어요!', '🎰');
 }
 
 // 초기화
 function resetAssignments() {
+  if (slotMachineState.tickInterval) {
+    clearInterval(slotMachineState.tickInterval);
+    slotMachineState.tickInterval = null;
+  }
+  slotMachineState.activeTimeouts.forEach(t => clearTimeout(t));
+  slotMachineState.activeTimeouts = [];
+  state.isShuffling = false;
+
   state.assignments = [];
   state.save();
   renderAllViews();
