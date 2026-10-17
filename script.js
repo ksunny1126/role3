@@ -45,6 +45,93 @@ export const DEFAULT_ROLES = [
   { id: 12, icon: '🌟', name: '다정다감 칭찬 배달원', desc: '친구들에게 고운 말과 따뜻한 칭찬을 선물해요.', pantoneCode: '13-1023 TCX', pantoneName: 'Peach Fuzz', color: '#FFBE98', textColor: '#0F172A' }
 ];
 
+export function parseStudentName(item) {
+  if (item == null) return '';
+  if (typeof item === 'string') {
+    const trimmed = item.trim();
+    if (trimmed === '[object Object]') return '';
+    return trimmed;
+  }
+  if (typeof item === 'number') {
+    return String(item);
+  }
+  if (Array.isArray(item)) {
+    for (const sub of item) {
+      const parsed = parseStudentName(sub);
+      if (parsed) return parsed;
+    }
+    return '';
+  }
+  if (typeof item === 'object') {
+    // 1. 일반적인 한글/영문 속성명 우선 확인
+    const priorityKeys = [
+      'name', '이름', '학생', '학생이름', 'student', 'studentName', 
+      '성명', 'student_name', 'text', 'value', 'label', '0'
+    ];
+    for (const key of priorityKeys) {
+      if (item[key] != null) {
+        const val = parseStudentName(item[key]);
+        if (val) return val;
+      }
+    }
+    // 2. 객체 내부의 첫 번째 유효한 문자열 탐색
+    for (const val of Object.values(item)) {
+      if (typeof val === 'string' && val.trim() && val !== '[object Object]') {
+        return val.trim();
+      }
+    }
+  }
+  return '';
+}
+
+export function parseRoleItem(item, idx = 0) {
+  if (item == null) return null;
+  let name = '';
+  let desc = '우리 반을 돕는 소중한 역할';
+  let icon = '🌟';
+
+  if (typeof item === 'string') {
+    let line = item.trim();
+    if (line.includes(':')) {
+      const parts = line.split(':');
+      name = parts[0].trim();
+      desc = parts.slice(1).join(':').trim();
+    } else {
+      name = line;
+    }
+  } else if (Array.isArray(item)) {
+    // [name, desc, icon] or [student, role, desc, icon]
+    name = parseStudentName(item[0]);
+    if (item[1]) desc = String(item[1]).trim();
+    if (item[2]) icon = String(item[2]).trim();
+  } else if (typeof item === 'object') {
+    name = item.name || item.역할 || item.역할명 || item.role || item.roleName || item.title || '';
+    desc = item.desc || item.설명 || item.역할설명 || item.description || desc;
+    icon = item.icon || item.이모지 || item.아이콘 || item.emoji || icon;
+  }
+
+  name = String(name || '').trim();
+  desc = String(desc || '').trim();
+  icon = String(icon || '🌟').trim();
+
+  // 첫 글자 이모지 분리
+  const firstToken = name.split(' ')[0];
+  const matchEmoji = /[\u{1F300}-\u{1F9FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]/u.test(firstToken);
+  if (matchEmoji) {
+    icon = firstToken;
+    name = name.substring(firstToken.length).trim();
+  }
+
+  if (!name) name = `역할 ${idx + 1}`;
+
+  return getRoleWithPantone({
+    id: idx + 1,
+    icon: icon || '🌟',
+    name,
+    desc: desc || '우리 반을 돕는 소중한 역할'
+  }, idx);
+}
+
 export function getRoleWithPantone(role, index = 0) {
   const p = PANTONE_PALETTE[index % PANTONE_PALETTE.length];
   return {
@@ -59,9 +146,25 @@ export function getRoleWithPantone(role, index = 0) {
 // --- 2. 앱 전역 상태 (Application State) ---
 class AppState {
   constructor() {
-    this.students = this.loadFromStorage('class_roles_students', DEFAULT_STUDENTS);
-    this.roles = this.loadFromStorage('class_roles_list', DEFAULT_ROLES);
-    this.assignments = this.loadFromStorage('class_roles_assignments', []);
+    const rawStudents = this.loadFromStorage('class_roles_students', DEFAULT_STUDENTS);
+    this.students = Array.isArray(rawStudents)
+      ? rawStudents.map(s => parseStudentName(s)).filter(s => s && s !== '[object Object]')
+      : [...DEFAULT_STUDENTS];
+    if (this.students.length === 0) this.students = [...DEFAULT_STUDENTS];
+
+    const rawRoles = this.loadFromStorage('class_roles_list', DEFAULT_ROLES);
+    this.roles = Array.isArray(rawRoles) && rawRoles.length > 0
+      ? rawRoles.map((r, i) => parseRoleItem(r, i)).filter(Boolean)
+      : [...DEFAULT_ROLES];
+
+    const rawAssignments = this.loadFromStorage('class_roles_assignments', []);
+    this.assignments = Array.isArray(rawAssignments)
+      ? rawAssignments.map(a => ({
+          ...a,
+          studentName: parseStudentName(a.studentName) || '미배정'
+        })).filter(a => a.studentName !== '[object Object]')
+      : [];
+
     this.className = localStorage.getItem('class_roles_class_name') || '3학년 2반';
     this.isSoundEnabled = localStorage.getItem('class_roles_sound') !== 'false';
     this.currentView = 'card'; // 'card' or 'table'
@@ -930,11 +1033,19 @@ function openSheetLoadModal() {
 
 async function handleExecuteSheetLoad() {
   const inputUrl = document.getElementById('inputLoadScriptUrl');
-  const url = inputUrl ? inputUrl.value.trim() : '';
+  let url = inputUrl ? inputUrl.value.trim() : '';
 
   if (!url) {
     showToast('Apps Script 웹 앱 URL을 입력해 주세요. (또는 테스트 버튼 사용)', '⚠️');
     return;
+  }
+
+  // 구글 스프레드시트 공유 URL이 들어온 경우 gviz CSV 내보내기로 자동 보정 지원
+  if (url.includes('docs.google.com/spreadsheets/d/') && !url.includes('/exec')) {
+    const sheetIdMatch = url.match(/docs\.google\.com\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
+    if (sheetIdMatch && sheetIdMatch[1]) {
+      url = `https://docs.google.com/spreadsheets/d/${sheetIdMatch[1]}/gviz/tq?tqx=out:csv`;
+    }
   }
 
   localStorage.setItem('class_roles_sheet_load_url', url);
@@ -942,24 +1053,113 @@ async function handleExecuteSheetLoad() {
 
   try {
     const response = await fetch(url);
-    if (!response.ok) throw new Error('네트워크 응답 오류');
-    const data = await response.json();
+    if (!response.ok) throw new Error(`HTTP 상태 코드: ${response.status}`);
+    const text = await response.text();
 
-    if (data.students && Array.isArray(data.students)) {
-      state.students = data.students;
+    let rawData;
+    // 1. Google Visualization Query 응답 파싱
+    if (text.includes('google.visualization.Query.setResponse(')) {
+      const match = text.match(/google\.visualization\.Query\.setResponse\(([\s\S]*)\);/);
+      if (match) {
+        const gviz = JSON.parse(match[1]);
+        if (gviz && gviz.table && gviz.table.rows) {
+          rawData = gviz.table.rows.map(r => (r.c ? r.c.map(cell => (cell ? cell.v : '')) : []));
+        }
+      }
+    } else {
+      // 2. 표준 JSON 또는 CSV 시도
+      try {
+        rawData = JSON.parse(text);
+      } catch {
+        // CSV 파싱
+        const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
+        rawData = lines.map(line => line.split(',').map(c => c.trim().replace(/^"|"$/g, '')));
+      }
     }
-    if (data.roles && Array.isArray(data.roles)) {
-      state.roles = data.roles;
+
+    let incomingStudents = [];
+    let incomingRoles = [];
+
+    // 구조별 유연한 학생 & 역할 데이터 추출
+    if (rawData && typeof rawData === 'object' && !Array.isArray(rawData)) {
+      if (Array.isArray(rawData.students)) incomingStudents = rawData.students;
+      else if (Array.isArray(rawData.studentList)) incomingStudents = rawData.studentList;
+      else if (Array.isArray(rawData.names)) incomingStudents = rawData.names;
+      else if (Array.isArray(rawData.data)) incomingStudents = rawData.data;
+      else if (Array.isArray(rawData.values)) incomingStudents = rawData.values;
+      else if (Array.isArray(rawData.rows)) incomingStudents = rawData.rows;
+
+      if (Array.isArray(rawData.roles)) incomingRoles = rawData.roles;
+      else if (Array.isArray(rawData.roleList)) incomingRoles = rawData.roleList;
+    } else if (Array.isArray(rawData)) {
+      incomingStudents = rawData;
+    }
+
+    const parsedStudents = [];
+    const extractedRolesFromRows = [];
+
+    incomingStudents.forEach((entry, idx) => {
+      // 만약 행 객체에 student / role 이 동시에 들어있는 경우
+      if (entry && typeof entry === 'object' && !Array.isArray(entry)) {
+        const studentName = parseStudentName(entry);
+        if (studentName) parsedStudents.push(studentName);
+
+        const roleName = entry.role || entry.역할 || entry.역할명 || entry.roleName;
+        if (roleName) {
+          extractedRolesFromRows.push(parseRoleItem(entry, extractedRolesFromRows.length));
+        }
+      } else if (Array.isArray(entry)) {
+        // 테이블 행 형태 [학생이름, 역할이름, 역할설명, 아이콘]
+        // 헤더 행("학생", "이름", "name") 스킵
+        if (idx === 0 && entry.some(cell => {
+          const str = String(cell || '');
+          return str.includes('학생') || str.includes('이름') || str.toLowerCase().includes('name');
+        })) {
+          return;
+        }
+
+        if (entry[0] != null) {
+          const studentName = parseStudentName(entry[0]);
+          if (studentName) parsedStudents.push(studentName);
+        }
+
+        if (entry[1] != null && String(entry[1]).trim()) {
+          extractedRolesFromRows.push(parseRoleItem({
+            name: entry[1],
+            desc: entry[2] || '우리 반을 돕는 소중한 역할',
+            icon: entry[3] || '🌟'
+          }, extractedRolesFromRows.length));
+        }
+      } else {
+        // 단일 문자열/값
+        const studentName = parseStudentName(entry);
+        if (studentName) parsedStudents.push(studentName);
+      }
+    });
+
+    if (parsedStudents.length === 0) {
+      showToast('시트에서 유효한 학생 이름을 찾을 수 없습니다.', '⚠️');
+      return;
+    }
+
+    state.students = parsedStudents;
+
+    // 역할 정보도 함께 제공된 경우 업데이트
+    if (incomingRoles.length > 0) {
+      const parsedRoles = incomingRoles.map((r, i) => parseRoleItem(r, i)).filter(Boolean);
+      if (parsedRoles.length > 0) state.roles = parsedRoles;
+    } else if (extractedRolesFromRows.length > 0) {
+      state.roles = extractedRolesFromRows;
     }
 
     state.assignments = [];
     state.save();
     renderAllViews();
     closeModal('sheetLoadModal');
-    showToast('구글 시트에서 데이터를 성공적으로 가져왔습니다!', '🎉');
+    showToast(`🎉 구글 시트에서 학생 ${parsedStudents.length}명의 이름을 완벽하게 불러왔습니다!`, '✅');
   } catch (err) {
     console.error(err);
-    showToast('시트 연결에 실패했습니다. Apps Script 배포 설정 및 CORS를 확인해 주세요.', '❌');
+    showToast(`시트 연결 실패: ${err.message || 'Apps Script URL 및 권한 설정을 확인해 주세요.'}`, '❌');
   }
 }
 

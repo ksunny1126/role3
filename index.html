@@ -199,13 +199,24 @@
         </div>
 
         <div class="form-group">
-          <label class="form-label">스프레드시트 권장 형식 안내</label>
+          <label class="form-label">스프레드시트 형식 & Apps Script (doGet) 권장 코드</label>
           <div class="code-box">
-[시트 1열: 학생 이름] | [시트 2열: 역할 이름] | [시트 3열: 역할 설명] | [시트 4열: 아이콘]
-예시:
-김하늘 | 칠판 청결 요정 | 칠판과 지우개를 늘 깨끗하게 닦아요 | 🧼
-이서준 | 급식 배식 도우미 | 점심시간에 식판과 줄을 챙겨요 | 🍱
+// 📌 시트 열 구성: 1열: 학생이름 | 2열: 역할이름 | 3열: 역할설명 | 4열: 아이콘
+// 📌 구글 확장프로그램 > Apps Script에 아래 코드를 넣고 웹앱으로 배포하세요:
+function doGet() {
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+  const rows = sheet.getDataRange().getValues();
+  const students = [];
+  const roles = [];
+  for (let i = 1; i < rows.length; i++) {
+    if (rows[i][0]) students.push(String(rows[i][0]).trim());
+    if (rows[i][1]) roles.push({ name: rows[i][1], desc: rows[i][2] || '', icon: rows[i][3] || '🌟' });
+  }
+  return ContentService.createTextOutput(JSON.stringify({ students: students, roles: roles }))
+    .setMimeType(ContentService.MimeType.JSON);
+}
           </div>
+          <p class="form-help">※ 객체 형태({ name: "홍길동" })나 단순 배열 등 어떤 형식으로 반환되어도 이름만 똑똑하게 추출됩니다.</p>
         </div>
       </div>
       <div class="modal-footer">
