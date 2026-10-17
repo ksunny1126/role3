@@ -27,16 +27,22 @@
   </div>
 
   <div class="app-container">
-    <!-- Web Header -->
+    <!-- Web Header (Pantone Studio Style) -->
     <header class="app-header">
       <div class="brand-area">
-        <div class="brand-icon">🎒</div>
+        <div class="pantone-swatch-icon" title="PANTONE® Color Palette">
+          <div class="swatch-top"></div>
+          <div class="swatch-bottom">
+            <span>P</span>
+          </div>
+        </div>
         <div>
+          <div class="brand-eyebrow">PANTONE<sup>®</sup> CLASSROOM EDITION</div>
           <h1 class="brand-title">
-            우글와글 1인 1역할
-            <span class="brand-badge">우리 반 약속</span>
+            1인 1역할 컬러 팔레트
+            <span class="brand-badge">2026 S/S</span>
           </h1>
-          <p class="brand-desc">모두가 주인공이 되어 스스로 돕고 배려하는 행복 교실</p>
+          <p class="brand-desc">각자의 고유한 빛깔로 조화롭게 물드는 우리들의 행복 교실</p>
         </div>
       </div>
 
@@ -117,31 +123,33 @@
       </div>
     </div>
 
-    <!-- Print Only Bulletin Header -->
+    <!-- Print Only Bulletin Header (Pantone Guide Style) -->
     <div class="print-only print-header">
-      <h1 id="printClassTitle">🏫 3학년 2반 1인 1역할 배정표</h1>
-      <p class="print-motto">"작은 실천이 모여 큰 배려가 됩니다. 우리 모두의 힘으로 빛나는 교실을 만들어요!"</p>
+      <div class="print-pantone-tag">PANTONE<sup>®</sup> CLASSROOM COLOR GUIDE 2026</div>
+      <h1 id="printClassTitle">🏫 3학년 2반 1인 1역할 컬러 배정표</h1>
+      <p class="print-motto">"모든 색이 모여 아름다운 그림이 되듯, 우리 모두의 실천이 행복한 학급을 완성합니다."</p>
       <div class="print-meta-row">
         <span id="printDateText">배정일: 2026년 10월 17일</span>
         <span>담임교사 확인: _________________ (인)</span>
       </div>
     </div>
 
-    <!-- View 1: Card Grid View -->
+    <!-- View 1: Card Grid View (Pantone Swatch Cards) -->
     <main id="cardsGrid" class="cards-grid">
       <!-- Generated Dynamically by script.js -->
     </main>
 
-    <!-- View 2: Table / Bulletin View (also used by Print) -->
+    <!-- View 2: Table / Bulletin View (Pantone Catalog View & Print) -->
     <section id="tableViewContainer" class="table-view-container">
       <table class="board-table">
         <thead>
           <tr>
-            <th class="col-num">번호</th>
-            <th class="col-student">학생 이름</th>
+            <th class="col-swatch">팬톤 컬러</th>
+            <th class="col-num">No.</th>
+            <th class="col-student">배정 학생</th>
             <th class="col-role">담당 역할</th>
             <th class="col-desc">하는 일 (실천 약속)</th>
-            <th class="col-stamp">주간 실천 확인</th>
+            <th class="col-stamp">주간 실천 스탬프</th>
           </tr>
         </thead>
         <tbody id="boardTableBody">

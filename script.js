@@ -5,26 +5,56 @@
  * ==========================================================================
  */
 
-// --- 1. 기본 초기 데이터 (학생 12명, 역할 12개) ---
+// --- 1. 팬톤 큐레이션 팔레트 & 기본 데이터 ---
+export const PANTONE_PALETTE = [
+  { code: '13-0647 TCX', name: 'Illuminating', color: '#F5DF4D', textColor: '#0F172A' },
+  { code: '16-1546 TCX', name: 'Living Coral', color: '#FF6F61', textColor: '#FFFFFF' },
+  { code: '16-4134 TCX', name: 'Little Boy Blue', color: '#7BA4D5', textColor: '#FFFFFF' },
+  { code: '15-0343 TCX', name: 'Greenery', color: '#88B04B', textColor: '#FFFFFF' },
+  { code: '16-5421 TCX', name: 'Fair Green', color: '#5FB49C', textColor: '#FFFFFF' },
+  { code: '17-3938 TCX', name: 'Very Peri', color: '#6667AB', textColor: '#FFFFFF' },
+  { code: '16-1364 TCX', name: 'Vibrant Orange', color: '#FA6D45', textColor: '#FFFFFF' },
+  { code: '15-5519 TCX', name: 'Biscay Bay', color: '#3AAFA9', textColor: '#FFFFFF' },
+  { code: '18-1440 TCX', name: 'Chili Pepper', color: '#E07A5F', textColor: '#FFFFFF' },
+  { code: '14-3812 TCX', name: 'Purple Haze', color: '#A29BFE', textColor: '#FFFFFF' },
+  { code: '18-4034 TCX', name: 'Classic Denim', color: '#457B9D', textColor: '#FFFFFF' },
+  { code: '13-1023 TCX', name: 'Peach Fuzz', color: '#FFBE98', textColor: '#0F172A' },
+  { code: '12-0740 TCX', name: 'Sunny Yellow', color: '#FEE05C', textColor: '#0F172A' },
+  { code: '14-1905 TCX', name: 'Rosewater', color: '#F6B7B6', textColor: '#0F172A' },
+  { code: '18-3943 TCX', name: 'Blue Iris', color: '#5A5B9F', textColor: '#FFFFFF' },
+  { code: '14-0446 TCX', name: 'Tender Greens', color: '#A8D5BA', textColor: '#0F172A' }
+];
+
 export const DEFAULT_STUDENTS = [
   '김하늘', '이서준', '박지민', '최도윤', '정수아', '강예은',
   '윤민호', '조은우', '한채원', '송시우', '백유진', '임태양'
 ];
 
 export const DEFAULT_ROLES = [
-  { id: 1, icon: '🧼', name: '칠판 청결 요정', desc: '칠판과 분필 지우개를 늘 깨끗하게 닦아요.' },
-  { id: 2, icon: '🍱', name: '급식 배식 도우미', desc: '점심시간에 식판 받기와 줄 서기를 도와줘요.' },
-  { id: 3, icon: '🥛', name: '우유 간식 당번', desc: '우유 상자를 받아오고 남은 우유를 정리해요.' },
-  { id: 4, icon: '💡', name: '에너지 절약 지킴이', desc: '쉬는 시간과 이동 수업 때 전등과 선풍기를 꺼요.' },
-  { id: 5, icon: '🌱', name: '식물 반려 매니저', desc: '교실 화분에 시원한 물을 주고 햇볕을 쬐어줘요.' },
-  { id: 6, icon: '📚', name: '도서관 정리 요정', desc: '학급문고 책을 번호와 종류별로 바르게 꽂아요.' },
-  { id: 7, icon: '⚽', name: '체육 놀이 대장', desc: '체육 시간 공과 준비물을 챙기고 뒷정리를 해요.' },
-  { id: 8, icon: '♻️', name: '분리배출 보안관', desc: '재활용 쓰레기와 비닐을 올바른 통에 분류해요.' },
-  { id: 9, icon: '🎒', name: '튼튼 줄반장', desc: '이동할 때 친구들이 안전하고 바르게 서도록 도와요.' },
-  { id: 10, icon: '🔍', name: '분실물 센터 지킴이', desc: '바닥에 떨어진 연필과 지우개 주인을 찾아줘요.' },
-  { id: 11, icon: '💻', name: '스마트 방송 도우미', desc: '수업용 TV와 태블릿 충전함을 안전하게 관리해요.' },
-  { id: 12, icon: '🌟', name: '다정다감 칭찬 배달원', desc: '친구들에게 고운 말과 따뜻한 칭찬을 선물해요.' }
+  { id: 1, icon: '🧼', name: '칠판 청결 요정', desc: '칠판과 분필 지우개를 늘 깨끗하게 닦아요.', pantoneCode: '13-0647 TCX', pantoneName: 'Illuminating', color: '#F5DF4D', textColor: '#0F172A' },
+  { id: 2, icon: '🍱', name: '급식 배식 도우미', desc: '점심시간에 식판 받기와 줄 서기를 도와줘요.', pantoneCode: '16-1546 TCX', pantoneName: 'Living Coral', color: '#FF6F61', textColor: '#FFFFFF' },
+  { id: 3, icon: '🥛', name: '우유 간식 당번', desc: '우유 상자를 받아오고 남은 우유를 정리해요.', pantoneCode: '16-4134 TCX', pantoneName: 'Little Boy Blue', color: '#7BA4D5', textColor: '#FFFFFF' },
+  { id: 4, icon: '💡', name: '에너지 절약 지킴이', desc: '쉬는 시간과 이동 수업 때 전등과 선풍기를 꺼요.', pantoneCode: '15-0343 TCX', pantoneName: 'Greenery', color: '#88B04B', textColor: '#FFFFFF' },
+  { id: 5, icon: '🌱', name: '식물 반려 매니저', desc: '교실 화분에 시원한 물을 주고 햇볕을 쬐어줘요.', pantoneCode: '16-5421 TCX', pantoneName: 'Fair Green', color: '#5FB49C', textColor: '#FFFFFF' },
+  { id: 6, icon: '📚', name: '도서관 정리 요정', desc: '학급문고 책을 번호와 종류별로 바르게 꽂아요.', pantoneCode: '17-3938 TCX', pantoneName: 'Very Peri', color: '#6667AB', textColor: '#FFFFFF' },
+  { id: 7, icon: '⚽', name: '체육 놀이 대장', desc: '체육 시간 공과 준비물을 챙기고 뒷정리를 해요.', pantoneCode: '16-1364 TCX', pantoneName: 'Vibrant Orange', color: '#FA6D45', textColor: '#FFFFFF' },
+  { id: 8, icon: '♻️', name: '분리배출 보안관', desc: '재활용 쓰레기와 비닐을 올바른 통에 분류해요.', pantoneCode: '15-5519 TCX', pantoneName: 'Biscay Bay', color: '#3AAFA9', textColor: '#FFFFFF' },
+  { id: 9, icon: '🎒', name: '튼튼 줄반장', desc: '이동할 때 친구들이 안전하고 바르게 서도록 도와요.', pantoneCode: '18-1440 TCX', pantoneName: 'Chili Pepper', color: '#E07A5F', textColor: '#FFFFFF' },
+  { id: 10, icon: '🔍', name: '분실물 센터 지킴이', desc: '바닥에 떨어진 연필과 지우개 주인을 찾아줘요.', pantoneCode: '14-3812 TCX', pantoneName: 'Purple Haze', color: '#A29BFE', textColor: '#FFFFFF' },
+  { id: 11, icon: '💻', name: '스마트 방송 도우미', desc: '수업용 TV와 태블릿 충전함을 안전하게 관리해요.', pantoneCode: '18-4034 TCX', pantoneName: 'Classic Denim', color: '#457B9D', textColor: '#FFFFFF' },
+  { id: 12, icon: '🌟', name: '다정다감 칭찬 배달원', desc: '친구들에게 고운 말과 따뜻한 칭찬을 선물해요.', pantoneCode: '13-1023 TCX', pantoneName: 'Peach Fuzz', color: '#FFBE98', textColor: '#0F172A' }
 ];
+
+export function getRoleWithPantone(role, index = 0) {
+  const p = PANTONE_PALETTE[index % PANTONE_PALETTE.length];
+  return {
+    ...role,
+    pantoneCode: role.pantoneCode || p.code,
+    pantoneName: role.pantoneName || p.name,
+    color: role.color || p.color,
+    textColor: role.textColor || p.textColor
+  };
+}
 
 // --- 2. 앱 전역 상태 (Application State) ---
 class AppState {
@@ -418,16 +448,20 @@ function lockReelCard(cardIdx, totalCards) {
   const target = slotMachineState.targetAssignments[cardIdx];
   if (!target) return;
 
+  const role = getRoleWithPantone(state.roles[cardIdx] || {}, cardIdx);
+
   const reelWindow = card.querySelector('.slot-reel-window');
   if (reelWindow) {
     const initial = target.studentName.charAt(0);
     reelWindow.innerHTML = `
       <div class="slot-reel-item" style="height:100%; justify-content:space-between; animation: popSuccess 0.4s ease-out;">
         <div class="student-info">
-          <div class="student-avatar" style="background:#D1FAE5; color:#065F46; border-color:#A7F3D0;">${initial}</div>
+          <div class="student-avatar" style="background:${role.color}; color:${role.textColor};">
+            ${initial}
+          </div>
           <div class="student-name-box">
-            <span class="student-label" style="color:#059669; font-weight:800;">배정 확정! ✨</span>
-            <span class="student-name" style="color:#111827;">${target.studentName}</span>
+            <span class="student-label" style="color:var(--pantone-black); font-weight:800;">PANTONE MATCHED ✨</span>
+            <span class="student-name" style="color:var(--pantone-black);">${target.studentName}</span>
           </div>
         </div>
       </div>
@@ -442,7 +476,7 @@ function lockReelCard(cardIdx, totalCards) {
   if (!existingBadge) {
     const badge = document.createElement('span');
     badge.className = 'slot-locked-badge';
-    badge.textContent = '🎉 당첨!';
+    badge.textContent = 'MATCHED';
     card.appendChild(badge);
   }
 
@@ -560,14 +594,14 @@ function updatePrintHeader() {
   const dateStr = `${today.getFullYear()}년 ${today.getMonth() + 1}월 ${today.getDate()}일`;
 
   if (titleEl) {
-    titleEl.textContent = `🏫 ${state.className} 1인 1역할 배정표`;
+    titleEl.textContent = `🏫 ${state.className} 1인 1역할 컬러 칩 배정표`;
   }
   if (dateEl) {
     dateEl.textContent = `배정일: ${dateStr}`;
   }
 }
 
-// 카드 뷰 렌더링
+// 카드 뷰 렌더링 (팬톤 컬러 칩 스타일)
 function renderCards(tempStudentList = null, isPreview = false) {
   const grid = document.getElementById('cardsGrid');
   if (!grid) return;
@@ -575,7 +609,8 @@ function renderCards(tempStudentList = null, isPreview = false) {
   const query = state.searchQuery.trim().toLowerCase();
   grid.innerHTML = '';
 
-  const displayList = state.roles.map((role, idx) => {
+  const displayList = state.roles.map((rawRole, idx) => {
+    const role = getRoleWithPantone(rawRole, idx);
     let studentName = '미배정';
     if (tempStudentList) {
       studentName = tempStudentList[idx] || '미배정';
@@ -595,16 +630,18 @@ function renderCards(tempStudentList = null, isPreview = false) {
     return (
       item.studentName.toLowerCase().includes(query) ||
       item.role.name.toLowerCase().includes(query) ||
-      item.role.desc.toLowerCase().includes(query)
+      item.role.desc.toLowerCase().includes(query) ||
+      item.role.pantoneCode.toLowerCase().includes(query) ||
+      item.role.pantoneName.toLowerCase().includes(query)
     );
   });
 
   if (filtered.length === 0) {
     grid.innerHTML = `
-      <div style="grid-column: 1 / -1; text-align:center; padding: 40px; background:#FFFFFF; border-radius:16px; border: 2px dashed #CBD5E1;">
+      <div style="grid-column: 1 / -1; text-align:center; padding: 48px; background:#FFFFFF; border-radius:12px; border: 1px dashed var(--pantone-gray-border);">
         <span style="font-size:2.5rem;">🔍</span>
-        <h3 style="font-size:1.1rem; margin-top:8px; color:#4B5563;">검색 결과와 일치하는 학생이나 역할이 없어요.</h3>
-        <p style="color:#9CA3AF; font-size:0.9rem;">검색어를 다시 확인해 주세요.</p>
+        <h3 style="font-size:1.1rem; margin-top:8px; font-weight:800; color:var(--pantone-black);">일치하는 팬톤 컬러 또는 역할이 없습니다.</h3>
+        <p style="color:var(--pantone-gray-text); font-size:0.88rem;">검색어를 다시 확인해 주세요.</p>
       </div>
     `;
     return;
@@ -613,40 +650,55 @@ function renderCards(tempStudentList = null, isPreview = false) {
   filtered.forEach(item => {
     const { role, studentName, index } = item;
     const isAssigned = studentName !== '미배정';
-    const themeClass = `card-theme-${(index - 1) % 6}`;
 
     const card = document.createElement('div');
-    card.className = `role-card ${themeClass} ${isPreview ? 'shuffling' : (isAssigned ? 'assigned-pop' : '')}`;
+    card.className = `role-card pantone-card ${isPreview ? 'shuffling' : (isAssigned ? 'assigned-pop' : '')}`;
+    card.setAttribute('data-role-id', role.id);
     
     // 학생 첫 글자 아바타
     const initial = isAssigned ? studentName.charAt(0) : '?';
 
     card.innerHTML = `
-      <div class="card-top">
-        <div class="role-icon-box" title="${role.name}">
+      <!-- 1. Upper Solid Color Block (Pantone Swatch Field) -->
+      <div class="pantone-swatch-top" style="background-color: ${role.color};">
+        <div class="pantone-top-header">
+          <span class="pantone-chip-badge">#${index}</span>
+          <span class="pantone-code-badge">${role.pantoneCode}</span>
+        </div>
+        <div class="pantone-icon-bubble" title="${role.name}">
           <span>${role.icon || '🌟'}</span>
         </div>
-        <span class="card-number-badge">역할 #${index}</span>
       </div>
 
-      <div class="role-info">
-        <h3 class="role-title">${role.name}</h3>
-        <p class="role-desc">${role.desc}</p>
-      </div>
-
-      <div class="student-slot ${isAssigned ? 'assigned' : 'unassigned'}">
-        <div class="student-info">
-          <div class="student-avatar">${initial}</div>
-          <div class="student-name-box">
-            <span class="student-label">담당 학생</span>
-            <span class="student-name">${studentName}</span>
-          </div>
+      <!-- 2. Lower White Block (Pantone Spec & Typography) -->
+      <div class="pantone-swatch-bottom">
+        <div class="pantone-spec-header">
+          <span class="pantone-brand-tag">PANTONE<sup>®</sup></span>
+          <span class="pantone-spec-name">${role.pantoneName}</span>
         </div>
-        ${!isPreview ? `
-          <button class="btn-card-swap" data-role-id="${role.id}" title="담당 학생 수동 변경 및 교환">
-            🔄
-          </button>
-        ` : ''}
+
+        <div class="pantone-role-info">
+          <h3 class="role-title">${role.name}</h3>
+          <p class="role-desc">${role.desc}</p>
+        </div>
+
+        <!-- Student Assignment Tag -->
+        <div class="student-slot ${isAssigned ? 'assigned' : 'unassigned'}">
+          <div class="student-info">
+            <div class="student-avatar" style="background-color: ${role.color}; color: ${role.textColor};">
+              ${initial}
+            </div>
+            <div class="student-name-box">
+              <span class="student-label">COLOR ASSIGNEE</span>
+              <span class="student-name">${studentName}</span>
+            </div>
+          </div>
+          ${!isPreview ? `
+            <button class="btn-card-swap" data-role-id="${role.id}" title="담당 학생 수동 변경 및 교환">
+              🔄
+            </button>
+          ` : ''}
+        </div>
       </div>
     `;
 
@@ -655,7 +707,7 @@ function renderCards(tempStudentList = null, isPreview = false) {
     if (swapBtn) {
       swapBtn.addEventListener('click', (e) => {
         e.stopPropagation();
-        openSwapModal(role.id, role.name, studentName);
+        openSwapModal(role.id, `${role.icon} ${role.name}`, studentName);
       });
     }
 
@@ -663,7 +715,7 @@ function renderCards(tempStudentList = null, isPreview = false) {
   });
 }
 
-// 표(게시판) 뷰 렌더링
+// 표(게시판) 뷰 렌더링 (팬톤 컬러 칩 테이블)
 function renderTable() {
   const tbody = document.getElementById('boardTableBody');
   if (!tbody) return;
@@ -671,7 +723,8 @@ function renderTable() {
   tbody.innerHTML = '';
   const query = state.searchQuery.trim().toLowerCase();
 
-  state.roles.forEach((role, idx) => {
+  state.roles.forEach((rawRole, idx) => {
+    const role = getRoleWithPantone(rawRole, idx);
     let studentName = '미배정';
     if (state.assignments.length > 0) {
       const match = state.assignments.find(a => a.roleId === role.id) || state.assignments[idx];
@@ -682,19 +735,24 @@ function renderTable() {
       const matchQuery = (
         studentName.toLowerCase().includes(query) ||
         role.name.toLowerCase().includes(query) ||
-        role.desc.toLowerCase().includes(query)
+        role.desc.toLowerCase().includes(query) ||
+        role.pantoneCode.toLowerCase().includes(query) ||
+        role.pantoneName.toLowerCase().includes(query)
       );
       if (!matchQuery) return;
     }
 
     const tr = document.createElement('tr');
     tr.innerHTML = `
+      <td class="col-swatch">
+        <div class="table-swatch-chip" style="background-color: ${role.color};" title="${role.pantoneCode} ${role.pantoneName}"></div>
+      </td>
       <td class="col-num">${idx + 1}</td>
       <td class="col-student">${studentName}</td>
       <td class="col-role">${role.icon || '🌟'} ${role.name}</td>
       <td class="col-desc">${role.desc}</td>
       <td class="col-stamp">
-        <span class="stamp-box-demo" title="참 잘했어요 스탬프 자리"></span>
+        <span class="stamp-box-demo" title="주간 실천 스탬프"></span>
       </td>
     `;
     tbody.appendChild(tr);
